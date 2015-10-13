@@ -22,7 +22,7 @@ class _load_validation:
                             |_struct. = dictionnary structure for validation purposes
 
     """
-    def __init__(self, observed, simulated, flow='sf', debug=False, debug_plot=False):
+    def __init__(self, observed, simulated, flow='sf', closefallback=False, debug=False, debug_plot=False):
         if debug: print "..variables.."
         self.obs = observed.Variables
         self.sim = simulated.Variables
@@ -35,8 +35,8 @@ class _load_validation:
         if flow == 'daf':
             self._3D = False
         else:
-            self._3D = simulated.Variables._3D
-
+            self._3D = simulated.Variables._3D 
+     
         #Check if times coincide
         obsMax = self.obs.matlabTime[~np.isnan(self.obs.matlabTime)].max()
         obsMin = self.obs.matlabTime[~np.isnan(self.obs.matlabTime)].min()
@@ -91,18 +91,18 @@ class _load_validation:
             if not observed.__module__=='pyseidon.drifterClass.drifterClass':
                 if debug: print "...Interpolation at measurement location..."
                 el = simulated.Util2D.interpolation_at_point(self.sim.el,
-                                                             self.obs.lon, self.obs.lat)
+                                                             self.obs.lon, self.obs.lat, closefallback=closefallback, debug=debug)
                 ua = simulated.Util2D.interpolation_at_point(self.sim.ua,
-                                                             self.obs.lon, self.obs.lat)
+                                                             self.obs.lon, self.obs.lat, closefallback=closefallback, debug=debug)
                 va = simulated.Util2D.interpolation_at_point(self.sim.va,
-                                                             self.obs.lon, self.obs.lat)
+                                                             self.obs.lon, self.obs.lat, closefallback=closefallback, debug=debug)
                 if self._3D:
                     u = simulated.Util3D.interpolation_at_point(self.sim.u,
-                                                                self.obs.lon, self.obs.lat)
+                                                                self.obs.lon, self.obs.lat, closefallback=closefallback, debug=debug)
                     v = simulated.Util3D.interpolation_at_point(self.sim.v,
-                                                                self.obs.lon, self.obs.lat)
+                                                                self.obs.lon, self.obs.lat, closefallback=closefallback, debug=debug)
                     sig = simulated.Util3D.interpolation_at_point(simulated.Grid.siglay,
-                                                                  self.obs.lon, self.obs.lat)
+                                                                  self.obs.lon, self.obs.lat, closefallback=closefallback, debug=debug)
             else: #Interpolation for drifter
                 if debug: print "...Interpolation at measurement locations & times..."
                 if self._3D:

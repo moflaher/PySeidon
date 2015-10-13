@@ -42,7 +42,7 @@ class Validation:
     Option:
       - flow = impose flow comparison by surface flow ('sf'), depth-averaged flow ('daf') or at any depth (float)
     """
-    def __init__(self, observed, simulated, flow=[], debug=False, debug_plot=False):
+    def __init__(self, observed, simulated, flow=[], closefallback=False, debug=False, debug_plot=False):
         self._debug = debug
         self._flow = flow
         if type(observed) in [tuple, list]:
@@ -51,6 +51,8 @@ class Validation:
             self._multi = False
         self._debug_plot = debug_plot
         if debug: print '-Debug mode on-'
+        
+        self._closefallback=closefallback
 
         #Metadata
         if not self._multi:
@@ -62,7 +64,7 @@ class Validation:
         self._observed = observed
         self._simulated = simulated
         if not self._multi:
-            self.Variables = _load_validation(self._observed, self._simulated, flow=self._flow, debug=self._debug)
+            self.Variables = _load_validation(self._observed, self._simulated, flow=self._flow, closefallback=self._closefallback,debug=self._debug)
 
         return
 
@@ -407,7 +409,7 @@ class Validation:
             I=0
             for meas in self._observed:
                 try:
-                    self.Variables = _load_validation(meas, self._simulated, flow=self._flow, debug=self._debug)
+                    self.Variables = _load_validation(meas, self._simulated, flow=self._flow, closefallback=self._closefallback, debug=self._debug)
                     self._validate_data(filename, depth, plot, save_csv, debug, debug_plot)
                     if I == 0:
                         self.Benchmarks = self._Benchmarks
@@ -434,11 +436,11 @@ class Validation:
                     coefficients into *.csv files (i.e. *_harmo_coef.csv)
         """
         if not self._multi:
-            self.Variables = _load_validation(self._observed, self._simulated, flow=self._flow, debug=self._debug)
+            self.Variables = _load_validation(self._observed, self._simulated, flow=self._flow, closefallback=self._closefallback, debug=self._debug)
             self._validate_harmonics(filename, save_csv, debug, debug_plot)
         else:
             for i, meas in enumerate(self._observed):
-                self.Variables = _load_validation(meas, self._simulated, flow=self._flow, debug=self._debug)
+                self.Variables = _load_validation(meas, self._simulated, flow=self._flow, closefallback=self._closefallback, debug=self._debug)
                 if filename == []:
                     filename = 'meas'+str(i)
                 else:

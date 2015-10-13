@@ -441,7 +441,7 @@ class FunctionsFvcom:
 
         return index
 
-    def interpolation_at_point(self, var, pt_lon, pt_lat, index=[], debug=False):
+    def interpolation_at_point(self, var, pt_lon, pt_lat, index=[], closefallback=False,debug=False):
         """
         This function interpolates any given variables at any give location.
 
@@ -462,15 +462,23 @@ class FunctionsFvcom:
         """
         debug = (debug or self._debug)
         if debug:
-            print 'Interpolaling at point...'
+            print 'Interpolating at point...'
         if debug: start = time.time()
 
         if index == []:
-            index = self.index_finder(pt_lon, pt_lat, debug=False)
-
-        if index == -1:
+            index = self.index_finder(pt_lon, pt_lat, debug=False)    
+  
+        if ((index == -1) and (closefallback==False)):
             # nan array if outside of domain
             varInterp = np.ones(var.shape[:-1]) * np.nan
+        elif ((index == -1) and (closefallback==True)):
+            #outside of domain with _closefallback true use the closest node or element          
+            if var.shape[-1] == self._grid.nnode:
+                idx=np.argmin((self._grid.lon[:]-pt_lon)**2+(self._grid.lat[:]-pt_lat)**2)
+                varInterp = var[:,idx]
+            else:
+                idx=np.argmin((self._grid.lonc[:]-pt_lon)**2+(self._grid.latc[:]-pt_lat)**2)])
+                varInterp = var[:,idx]        
         else:
             lon = self._grid.lon
             lat = self._grid.lat
@@ -484,7 +492,9 @@ class FunctionsFvcom:
             latweight = (lat[int(trinodes[index,0])]\
                        + lat[int(trinodes[index,1])]\
                        + lat[int(trinodes[index,2])]) / 3.0
-            TPI=111194.92664455874 #No sure what is this coeff, yet comes from FVCOM
+            #TPI=Deg2Rad*Rearth
+            #TPI=(np.pi/180)*6371000
+            TPI=111194.92664455874 
             pt_y = TPI * (pt_lat - latweight)
             dx_sph = pt_lon - lonweight
             if (dx_sph > 180.0):
