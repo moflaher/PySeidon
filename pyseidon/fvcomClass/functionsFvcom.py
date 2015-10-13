@@ -477,7 +477,7 @@ class FunctionsFvcom:
                 idx=np.argmin((self._grid.lon[:]-pt_lon)**2+(self._grid.lat[:]-pt_lat)**2)
                 varInterp = var[:,idx]
             else:
-                idx=np.argmin((self._grid.lonc[:]-pt_lon)**2+(self._grid.latc[:]-pt_lat)**2)])
+                idx=np.argmin((self._grid.lonc[:]-pt_lon)**2+(self._grid.latc[:]-pt_lat)**2)
                 varInterp = var[:,idx]        
         else:
             lon = self._grid.lon
