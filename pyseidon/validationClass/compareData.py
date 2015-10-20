@@ -49,7 +49,7 @@ def compareUV(data, threeDim, depth=5, plot=False, save_csv=False,
     if debug: print "CompareUV..."
     # take data from input dictionary
     mod_time = data['mod_time']
-    if not data['type'] == 'Drifter':
+    if (not data['type'] == 'Drifter') and (not data['type'] == 'basicADCP'):
         obs_time = data['obs_time']
 
         mod_el = data['mod_timeseries']['elev']
@@ -105,7 +105,7 @@ def compareUV(data, threeDim, depth=5, plot=False, save_csv=False,
     obs_spd = np.sqrt(obs_u**2.0 + obs_v**2.0)
     mod_dir = np.arctan2(mod_v, mod_u) * 180.0 / np.pi
     obs_dir = np.arctan2(obs_v, obs_u) * 180.0 / np.pi
-    if not data['type'] == 'Drifter':
+    if (not data['type'] == 'Drifter') and (not data['type'] == 'basicADCP'):
         obs_el = obs_el - np.mean(obs_el[~np.isnan(obs_el)])
     # Chose the component with the biggest variance as sign reference
     if np.var(mod_v) > np.var(mod_u):
@@ -122,9 +122,6 @@ def compareUV(data, threeDim, depth=5, plot=False, save_csv=False,
     else:
         if debug: print "...interpolate the data onto a common time step for each data type..."
         if not data['type'] == 'Drifter':
-            # elevation
-            (mod_el_int, obs_el_int, step_el_int, start_el_int) = smooth(mod_el, mod_dt, obs_el, obs_dt,
-                                                                         debug=debug, debug_plot=debug_plot)
             # speed
             (mod_sp_int, obs_sp_int, step_sp_int, start_sp_int) = smooth(mod_spd, mod_dt, obs_spd, obs_dt,
                                                                          debug=debug, debug_plot=debug_plot)
@@ -148,6 +145,12 @@ def compareUV(data, threeDim, depth=5, plot=False, save_csv=False,
             obs_cspd = obs_signed * obs_spd**3.0
             (mod_cspd_int, obs_cspd_int, step_cspd_int, start_cspd_int) = smooth(mod_cspd, mod_dt, obs_cspd, obs_dt,
                                                                                  debug=debug, debug_plot=debug_plot)
+            
+            if not data['type']=='basicADCP':
+                # elevation
+                (mod_el_int, obs_el_int, step_el_int, start_el_int) = smooth(mod_el, mod_dt, obs_el, obs_dt,
+                                                                             debug=debug, debug_plot=debug_plot)
+
         else:
             # Time steps
             step = mod_time[1] - mod_time[0]
@@ -189,7 +192,7 @@ def compareUV(data, threeDim, depth=5, plot=False, save_csv=False,
 
     if debug: print "...get stats for each tidal variable..."
     gear = data['type'] # Type of measurement gear (drifter, adcp,...)
-    if not gear == 'Drifter':
+    if (not data['type'] == 'Drifter') and (not data['type'] == 'basicADCP'):
         elev_suite = tidalSuite(gear, mod_el_int, obs_el_int, step_el_int, start_el_int,
                                 [], [], [], [], [], [],
                                 kind='elevation', plot=plot,
@@ -232,9 +235,10 @@ def compareUV(data, threeDim, depth=5, plot=False, save_csv=False,
     # output statistics in useful format
 
     if debug: print "...CompareUV done."
-
-
-    return (elev_suite, speed_suite, dir_suite, u_suite, v_suite, vel_suite, csp_suite)
+    if gear == 'basicADCP':
+        return (speed_suite, dir_suite, u_suite, v_suite, vel_suite, csp_suite)
+    else:
+        return (elev_suite, speed_suite, dir_suite, u_suite, v_suite, vel_suite, csp_suite)
 
 def compareTG(data, plot=False, save_csv=False, debug=False, debug_plot=False):
     """

@@ -9,6 +9,7 @@ import numpy as np
 from matplotlib.projections import PolarAxes
 import mpl_toolkits.axisartist.floating_axes as fa
 import mpl_toolkits.axisartist.grid_finder as gf
+import seaborn as sborn
 
 def plotRegression(tidalStatClass, lr, savepath='', fname='', debug=False):
     """
@@ -94,7 +95,8 @@ def plotData(tidalStatClass, graph='time', savepath='', fname='', debug=False):
     if debug: print "Plotting time-series..."
     #define figure frame
     fig = plt.figure(figsize=(18,10))
-    plt.rc('font',size='22')
+    plt.rc('font',size='30')
+    sborn.set(font_scale=2)
     ax = fig.add_subplot(111)
 
     if (graph == 'time'):

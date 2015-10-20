@@ -135,6 +135,28 @@ class Validation:
             vars.append('vel')
             # custom var
             vars.append('cubic_speed')
+        elif self.Variables.struct['type'] == 'basicADCP':
+            (speed_suite, dir_suite, u_suite, v_suite,
+             vel_suite, csp_suite) = compareUV(self.Variables.struct, threeD,
+                                    plot=plot, depth=depth, save_csv=save_csv,
+                                    debug=debug, debug_plot=debug_plot)
+            
+            self.Variables.struct['speed_val'] = speed_suite
+            self.Variables.struct['dir_val'] = dir_suite
+            self.Variables.struct['u_val'] = u_suite
+            self.Variables.struct['v_val'] = v_suite
+            self.Variables.struct['vel_val'] = vel_suite
+            # custom benchmark
+            self.Variables.struct['cubic_speed_val'] = csp_suite
+            # Variable to processed
+            
+            vars.append('speed')
+            vars.append('dir')
+            vars.append('u')
+            vars.append('v')
+            vars.append('vel')
+            # custom var
+            vars.append('cubic_speed')
 
         elif self.Variables.struct['type'] == 'TideGauge':
             elev_suite_dg = compareTG(self.Variables.struct,
@@ -213,6 +235,17 @@ class Validation:
             self.Variables.obs.elCoef = solve(time, el, None, lat,
                                          constit='auto', trend=False, Rayleigh_min=0.95,
                                          method='ols', conf_int='linear')
+        elif self.Variables._obstype=='basicadcp':
+            time = self.Variables.struct['obs_time']
+            lat = self.Variables.struct['lat']
+            ua =  self.Variables.struct['obs_timeseries']['ua'][:]
+            va =  self.Variables.struct['obs_timeseries']['va'][:]
+
+
+            self.Variables.obs.velCoef = solve(time, ua, va, lat,
+                                         constit='auto', trend=False, Rayleigh_min=0.95,
+                                         method='ols', conf_int='linear')
+
 
         elif self.Variables._obstype=='tidegauge':
             time = self.Variables.struct['obs_time']
@@ -233,7 +266,7 @@ class Validation:
             self.Variables.sim.elCoef = solve(time, el, None, lat,
                                          constit='auto', trend=False, Rayleigh_min=0.95,
                                          method='ols', conf_int='linear')
-            if self.Variables._obstype=='adcp':
+            if self.Variables._obstype=='adcp' or self.Variables._obstype=='basicadcp':
                 ua =  self.Variables.struct['mod_timeseries']['ua'][:]
                 va =  self.Variables.struct['mod_timeseries']['va'][:]
                 self.Variables.sim.velCoef = solve(time, ua, va, lat,
@@ -255,19 +288,23 @@ class Validation:
                                          constit='auto', trend=False, Rayleigh_min=0.95,
                                          method='ols', conf_int='linear')
 
+
         # find matching and non-matching coef
         matchElCoef = []
         matchElCoefInd = []
-        for i1, key1 in enumerate(self.Variables.sim.elCoef['name']):
-            for i2, key2 in enumerate(self.Variables.obs.elCoef['name']):
-                if key1 == key2:
-                   matchElCoefInd.append((i1,i2))
-                   matchElCoef.append(key1)
-        matchElCoefInd=np.array(matchElCoefInd)
-        noMatchElCoef = np.delete(self.Variables.sim.elCoef['name'],
-                                  matchElCoefInd[:,0])
-        np.hstack((noMatchElCoef,np.delete(self.Variables.obs.elCoef['name'],
-                   matchElCoefInd[:,1]) ))
+        try:
+            for i1, key1 in enumerate(self.Variables.sim.elCoef['name']):
+                for i2, key2 in enumerate(self.Variables.obs.elCoef['name']):
+                    if key1 == key2:
+                       matchElCoefInd.append((i1,i2))
+                       matchElCoef.append(key1)
+            matchElCoefInd=np.array(matchElCoefInd)
+            noMatchElCoef = np.delete(self.Variables.sim.elCoef['name'],
+                                      matchElCoefInd[:,0])
+            np.hstack((noMatchElCoef,np.delete(self.Variables.obs.elCoef['name'],
+                       matchElCoefInd[:,1]) ))
+        except AttributeError:
+            pass
 
         matchVelCoef = []
         matchVelCoefInd = []
@@ -290,25 +327,30 @@ class Validation:
 
         # Store harmonics in csv files
         if save_csv:
-            # observed elevation coefs
-            for key in columns:
-                data[key] = self.Variables.obs.elCoef[key]
-            table = pd.DataFrame(data=data, index=self.Variables.obs.elCoef['name'],
-                                 columns=columns)
-            # export as .csv file
-            out_file = '{}_obs_el_harmo_coef.csv'.format(filename)
-            table.to_csv(out_file)
-            data = {}
+            try:
+                # observed elevation coefs
+                for key in columns:
+                    data[key] = self.Variables.obs.elCoef[key]
+                table = pd.DataFrame(data=data, index=self.Variables.obs.elCoef['name'],
+                                     columns=columns)
+                # export as .csv file
+                name = self.Variables.struct['name']
+                save_path = name.split('/')[-1].split('.')[0]+'/'
+                out_file = '{}{}_obs_el_harmo_coef.csv'.format(save_path,filename)
+                table.to_csv(out_file)
+                data = {}
 
-            #modeled elevation coefs
-            for key in columns:
-                data[key] = self.Variables.sim.elCoef[key]
-            table = pd.DataFrame(data=data, index=self.Variables.sim.elCoef['name'],
-                                 columns=columns)
-            # export as .csv file
-            out_file = '{}_sim_el_harmo_coef.csv'.format(filename)
-            table.to_csv(out_file)
-            data = {}
+                #modeled elevation coefs
+                for key in columns:
+                    data[key] = self.Variables.sim.elCoef[key]
+                table = pd.DataFrame(data=data, index=self.Variables.sim.elCoef['name'],
+                                     columns=columns)
+                # export as .csv file
+                out_file = '{}{}_sim_el_harmo_coef.csv'.format(save_path,filename)
+                table.to_csv(out_file)
+                data = {}
+            except:
+                pass
 
         # error in %
         if not matchElCoef==[]:
@@ -321,7 +363,7 @@ class Validation:
             ##create table
             table = pd.DataFrame(data=data, index=matchElCoef, columns=columns)
             ##export as .csv file
-            out_file = '{}_el_harmo_error.csv'.format(filename)
+            out_file = '{}{}_el_harmo_error.csv'.format(save_path,filename)
             table.to_csv(out_file)
             ##print non-matching coefs
             if not noMatchElCoef.shape[0]==0:
@@ -335,7 +377,7 @@ class Validation:
                    'Lsmaj_ci', 'theta', 'g_ci']
 
         #Store harmonics in csv files
-        if save_csv:
+        if (save_csv and self.Variables._obstype!='tidegauge'):
             #observed elevation coefs
             for key in columns:
                 data[key] = self.Variables.obs.velCoef[key]

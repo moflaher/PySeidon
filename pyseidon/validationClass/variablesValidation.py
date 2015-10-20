@@ -230,6 +230,10 @@ class _load_validation:
                          'bins':self.obs.bins[:]}
 
             #Alternative measurement type
+            elif observed.__module__=='pyseidon.basicadcpClass.basicadcpClass' or observed.__module__ == 'basicadcpClass':
+                self._obstype = 'basicadcp'
+                obstype='basicADCP'
+                obs_mod={'ua':self.obs.ua[c],'va':self.obs.va[c]}
             elif observed.__module__=='pyseidon.tidegaugeClass.tidegaugeClass':
                 self._obstype = 'tidegauge'
                 obstype='TideGauge'

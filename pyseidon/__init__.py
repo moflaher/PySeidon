@@ -8,6 +8,7 @@ import sys
 local = os.path.dirname(__file__)
 sys.path.append(os.path.join(local,'fvcomClass'))
 sys.path.append(os.path.join(local,'adcpClass'))
+sys.path.append(os.path.join(local,'basicadcpClass'))
 sys.path.append(os.path.join(local,'drifterClass'))
 sys.path.append(os.path.join(local,'stationClass'))
 sys.path.append(os.path.join(local,'tidegaugeClass'))
@@ -17,6 +18,7 @@ sys.path.append(os.path.join(local,'utilities'))
 #Local import
 from utilities import *
 from adcpClass import *
+from basicadcpClass import *
 from drifterClass import *
 from tidegaugeClass import *
 from stationClass import *
@@ -30,7 +32,7 @@ from pyseidon.utilities.pyseidon_error import PyseidonError
 #print "OpenDap server connexion info:"
 
 __version__ = '2.0'
-__all__ = ["FVCOM", "ADCP", "Drifter", "TideGauge",\
+__all__ = ["FVCOM", "ADCP", "basicADCP", "Drifter", "TideGauge",\
            "Validation", "Station", "utilities", "PyseidonError"]
 __authors__ = ['Wesley Bowman, Thomas Roc, Jonathan Smith']
 __licence__ = 'GNU Affero GPL v3.0'
